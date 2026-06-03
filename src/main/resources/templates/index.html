@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
 
 <head th:replace="~{layout/base :: html_head('Home')}"></head>
 
@@ -15,89 +15,113 @@
         <div class="col-md-8">
 
             <!-- Sorting -->
-            <div class="card mb-3 p-2 flex-row align-items-center shadow-sm">
-                <span class="text-muted me-3 ms-2">Sort By:</span>
+            <div class="card mb-3 p-3 flex-row align-items-center shadow-sm">
+                <span class="text-muted me-3 ms-2 fw-bold">Sort By:</span>
 
                 <a th:href="@{/(sortBy='new')}"
                    class="btn btn-sm me-2"
                    th:classappend="${sortBy == 'new'} ? ' btn-primary' : ' btn-outline-secondary'">
-                    New
+                    🆕 New
                 </a>
 
                 <a th:href="@{/(sortBy='top')}"
                    class="btn btn-sm"
                    th:classappend="${sortBy == 'top'} ? ' btn-primary' : ' btn-outline-secondary'">
-                    Top
+                    🔥 Hot
+                </a>
+
+                <a th:href="@{/(sortBy='comments')}"
+                   class="btn btn-sm"
+                   th:classappend="${sortBy == 'comments'} ? ' btn-primary' : ' btn-outline-secondary'">
+                    💬 Comments
                 </a>
             </div>
 
             <!-- Empty Feed -->
             <div th:if="${#lists.isEmpty(posts)}"
-                 class="alert alert-info">
-                No posts available right now.
-                Be the first one to create a post.
+                 class="alert alert-info text-center py-5">
+                <h5>📭 No posts yet</h5>
+                <p class="text-muted">Be the first one to create a post!</p>
+                <a th:href="@{/posts/create}" class="btn btn-primary">Create Post</a>
             </div>
 
-            <!-- Posts -->
+            <!-- Posts Loop -->
             <div th:each="post : ${posts}"
                  class="card card-post mb-3 shadow-sm">
 
                 <div class="card-body d-flex">
 
-                    <!-- Voting -->
-                    <div class="d-flex flex-column align-items-center me-3 bg-light px-3 py-2 rounded">
+                    <!-- Voting Section -->
+                    <div class="d-flex flex-column align-items-center me-3 bg-light px-3 py-2 rounded" style="min-width: 60px;">
 
-                        <button class="btn btn-sm btn-link text-secondary text-decoration-none">
-                            ▲
-                        </button>
+                        <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
+                            <input type="hidden" name="type" value="UPVOTE">
+                            <button type="submit" class="btn btn-sm btn-link text-secondary text-decoration-none p-0">
+                                ▲
+                            </button>
+                        </form>
 
-                        <span class="fw-bold my-1"
-                              th:text="${post.score}">
+                        <span class="fw-bold my-1 text-dark"
+                              th:text="${post.score ?: 0}">
                             0
                         </span>
 
-                        <button class="btn btn-sm btn-link text-secondary text-decoration-none">
-                            ▼
-                        </button>
+                        <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
+                            <input type="hidden" name="type" value="DOWNVOTE">
+                            <button type="submit" class="btn btn-sm btn-link text-secondary text-decoration-none p-0">
+                                ▼
+                            </button>
+                        </form>
 
                     </div>
 
                     <!-- Post Content -->
                     <div class="flex-grow-1">
 
-                        <small class="text-muted">
-
-                            Posted in
-
-                            <a th:if="${post.community != null}"
-                               th:href="@{/communities/{id}(id=${post.community.id})}"
-                               th:text="'d/' + ${post.community.name}"
-                               class="fw-bold text-decoration-none">
-                                Community
+                        <!-- Post Meta -->
+                        <small class="text-muted d-block mb-1">
+                            <strong>
+                                <a th:if="${post.community != null}"
+                                   th:href="@{/communities/{id}(id=${post.community.id})}"
+                                   th:text="'d/' + ${post.community.name}"
+                                   class="text-decoration-none text-primary">
+                                    Community
+                                </a>
+                            </strong>
+                            •
+                            <a th:href="@{/user/{username}(username=${post.author.username})}"
+                               th:text="'u/' + ${post.author.username}"
+                               class="text-decoration-none text-muted">
+                                Author
                             </a>
-
-                            by
-
-                            <span th:text="'u/' + ${post.author.username}">
-                                author
+                            •
+                            <span th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy')}">
+                                Date
                             </span>
-
                         </small>
 
-                        <h5 class="card-title mt-2">
-
+                        <!-- Title & Content -->
+                        <h5 class="card-title mt-2 mb-2">
                             <a th:href="@{/posts/{id}(id=${post.id})}"
                                th:text="${post.title}"
                                class="text-dark text-decoration-none">
                                 Post Title
                             </a>
-
                         </h5>
 
                         <p class="card-text text-muted"
-                           th:text="${post.content}">
-                            Post content
+                           th:text="${post.content.length() > 200} ? ${post.content.substring(0, 200) + '...'} : ${post.content}">
+                            Post content preview...
                         </p>
+
+                        <!-- Post Footer -->
+                        <div class="small text-muted mt-2">
+                            <a th:href="@{/posts/{id}(id=${post.id})}" class="text-decoration-none text-secondary">
+                                💬 <span th:text="${post.comments.size() ?: 0}">0</span> Comments
+                            </a>
+                            •
+                            <span>👁️ Views</span>
+                        </div>
 
                     </div>
 
@@ -115,9 +139,15 @@
 
                         <a class="page-link"
                            th:href="@{/(page=${currentPage - 1}, sortBy=${sortBy})}">
-                            Previous
+                            ← Previous
                         </a>
 
+                    </li>
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>
+                        </span>
                     </li>
 
                     <li class="page-item"
@@ -125,7 +155,7 @@
 
                         <a class="page-link"
                            th:href="@{/(page=${currentPage + 1}, sortBy=${sortBy})}">
-                            Next
+                            Next →
                         </a>
 
                     </li>
@@ -139,56 +169,71 @@
         <!-- Sidebar -->
         <div class="col-md-4">
 
+            <!-- Welcome Card -->
             <div class="card shadow-sm mb-3">
 
                 <div class="card-body">
 
                     <h5 class="card-title">
-                        Welcome to DevHub
+                        👋 Welcome to DevHub
                     </h5>
 
                     <p class="text-muted small">
-                        A community platform for developers,
-                        Java enthusiasts, Spring Boot learners,
-                        DevOps engineers and cloud practitioners.
+                        A community platform for developers, Java enthusiasts, Spring Boot learners, DevOps engineers and cloud practitioners.
                     </p>
 
-                    <a th:href="@{/posts/create}"
-                       class="btn btn-primary w-100 mb-2">
-                        Create Post
-                    </a>
+                    <div sec:authorize="isAuthenticated()">
+                        <a th:href="@{/posts/create}"
+                           class="btn btn-primary w-100 mb-2">
+                            ✏️ Create Post
+                        </a>
 
-                    <a th:href="@{/communities/create}"
-                       class="btn btn-outline-secondary w-100">
-                        Create Community
-                    </a>
+                        <a th:href="@{/communities/create}"
+                           class="btn btn-success w-100">
+                            ➕ Create Community
+                        </a>
+                    </div>
+
+                    <div sec:authorize="isAnonymous()">
+                        <a th:href="@{/login}" class="btn btn-primary w-100 mb-2">
+                            Log In
+                        </a>
+                        <a th:href="@{/register}" class="btn btn-outline-primary w-100">
+                            Sign Up
+                        </a>
+                    </div>
 
                 </div>
 
             </div>
 
+            <!-- Popular Communities -->
             <div class="card shadow-sm">
 
-                <div class="card-header">
-                    Popular Communities
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">🏘️ Popular Communities</h6>
                 </div>
 
                 <ul class="list-group list-group-flush">
 
                     <li class="list-group-item">
-                        d/java
+                        <a th:href="@{/communities/java}" class="text-decoration-none">d/java</a>
+                        <small class="text-muted d-block">Java programming</small>
                     </li>
 
                     <li class="list-group-item">
-                        d/springboot
+                        <a th:href="@{/communities/springboot}" class="text-decoration-none">d/springboot</a>
+                        <small class="text-muted d-block">Spring Boot framework</small>
                     </li>
 
                     <li class="list-group-item">
-                        d/devops
+                        <a th:href="@{/communities/devops}" class="text-decoration-none">d/devops</a>
+                        <small class="text-muted d-block">DevOps & CI/CD</small>
                     </li>
 
                     <li class="list-group-item">
-                        d/cloud
+                        <a th:href="@{/communities/cloud}" class="text-decoration-none">d/cloud</a>
+                        <small class="text-muted d-block">Cloud computing</small>
                     </li>
 
                 </ul>
@@ -201,5 +246,8 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
+
 </html>

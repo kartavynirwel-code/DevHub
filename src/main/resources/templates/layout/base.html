@@ -13,40 +13,100 @@
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
     <style>
+        :root {
+            --primary-color: #0a66c2;
+            --secondary-color: #46b856;
+            --dark-color: #222;
+            --light-color: #f6f8f9;
+        }
+
         body {
-            background-color: #dae0e6;
+            background-color: var(--light-color);
             min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
         .navbar-brand {
             font-weight: 700;
             letter-spacing: -0.5px;
+            font-size: 1.5rem;
         }
 
         .card-post {
             cursor: pointer;
-            transition: border-color 0.15s ease-in-out;
+            transition: all 0.2s ease;
+            border: 1px solid #e1e6eb;
         }
 
         .card-post:hover {
-            border-color: #878a8c;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #0951a4;
+            border-color: #0951a4;
+        }
+
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success:hover {
+            background-color: #3aa84b;
+            border-color: #3aa84b;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border: 1px solid #e1e6eb;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(10, 102, 194, 0.25);
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
 
 <body>
 
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top"
      th:fragment="navbar">
 
     <div class="container">
 
+        <!-- Brand -->
         <a class="navbar-brand text-primary"
            th:href="@{/}">
-            DevHub
+            <strong>DevHub</strong>
         </a>
 
-        <form class="d-flex flex-grow-1 mx-4"
+        <!-- Toggle Button (Mobile) -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Search Bar -->
+        <form class="d-flex flex-grow-1 mx-4 collapse navbar-collapse" 
+              id="navbarNav"
               th:action="@{/search}"
               method="get">
 
@@ -57,13 +117,13 @@
                    aria-label="Search">
         </form>
 
-        <div class="d-flex align-items-center">
+        <!-- Right Side (Auth) -->
+        <div class="d-flex align-items-center gap-2">
 
-            <div sec:authorize="isAuthenticated()"
-                 class="d-flex align-items-center me-3 text-white">
-
-                <span class="me-2">
-                    u/<span sec:authentication="name">User</span>
+            <!-- Authenticated User -->
+            <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
+                <span class="text-white small me-2">
+                    👤 <span sec:authentication="name">User</span>
                 </span>
 
                 <a th:href="@{/logout}"
@@ -72,10 +132,10 @@
                 </a>
             </div>
 
-            <div sec:authorize="isAnonymous()">
-
+            <!-- Anonymous User -->
+            <div sec:authorize="isAnonymous()" class="d-flex gap-2">
                 <a th:href="@{/login}"
-                   class="btn btn-outline-light btn-sm me-2">
+                   class="btn btn-outline-light btn-sm">
                     Log In
                 </a>
 
@@ -83,7 +143,6 @@
                    class="btn btn-primary btn-sm">
                     Sign Up
                 </a>
-
             </div>
 
         </div>
@@ -92,13 +151,23 @@
 
 </nav>
 
-<div class="container my-4">
+<div class="container-fluid p-0">
     <div th:replace="${content}">
         <!-- Page Content -->
     </div>
 </div>
 
+<!-- Footer (Optional) -->
+<footer class="bg-dark text-white text-center py-4 mt-5">
+    <div class="container">
+        <small class="text-muted">
+            &copy; 2026 DevHub. A community platform for developers.
+        </small>
+    </div>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>

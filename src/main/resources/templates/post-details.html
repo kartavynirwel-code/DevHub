@@ -14,49 +14,97 @@
         <!-- Main Post Content -->
         <div class="col-md-8">
 
+            <!-- Post Card -->
             <div class="card shadow-sm mb-4">
 
                 <div class="card-body">
 
-                    <!-- Post Header Info -->
+                    <!-- Post Header -->
                     <small class="text-muted d-block mb-2">
-                        Posted in
-                        <a th:if="${post.community != null}"
-                           th:href="@{/communities/{id}(id=${post.community.id})}"
-                           th:text="'d/' + ${post.community.name}"
-                           class="fw-bold text-decoration-none">
-                            Community
+                        <strong>
+                            <a th:if="${post.community != null}"
+                               th:href="@{/communities/{id}(id=${post.community.id})}"
+                               th:text="'d/' + ${post.community.name}"
+                               class="text-decoration-none text-primary">
+                                Community
+                            </a>
+                        </strong>
+                        •
+                        <a th:href="@{/profile/{username}(username=${post.author.username})}"
+                           th:text="'u/' + ${post.author.username}"
+                           class="text-decoration-none text-muted">
+                            Author
                         </a>
-                        by
-                        <span th:text="'u/' + ${post.author.username}">author</span>
-                        <span th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy HH:mm')}">timestamp</span>
+                        •
+                        <span th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy HH:mm')}">
+                            Date
+                        </span>
                     </small>
 
                     <!-- Post Title -->
-                    <h1 class="card-title mb-3" th:text="${post.title}">Post Title</h1>
+                    <h1 class="card-title mb-3" th:text="${post.title}">
+                        Post Title
+                    </h1>
 
-                    <!-- Voting Section -->
-                    <div class="d-flex align-items-start mb-4">
-                        <div class="d-flex flex-column align-items-center bg-light px-3 py-2 rounded me-3">
-                            <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
-                                <input type="hidden" name="type" value="UPVOTE">
-                                <button type="submit" class="btn btn-sm btn-link text-secondary text-decoration-none">
-                                    ▲ Upvote
-                                </button>
-                            </form>
-                            <span class="fw-bold my-2" th:text="${post.score}">0</span>
-                            <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
-                                <input type="hidden" name="type" value="DOWNVOTE">
-                                <button type="submit" class="btn btn-sm btn-link text-secondary text-decoration-none">
-                                    ▼ Downvote
-                                </button>
-                            </form>
+                    <!-- Post Body with Voting -->
+                    <div class="d-flex gap-3">
+
+                        <!-- Upvote/Downvote -->
+                        <div class="d-flex flex-column align-items-center bg-light px-3 py-3 rounded" style="min-width: 70px;">
+
+                            <sec:authorize access="isAuthenticated()">
+                                <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
+                                    <input type="hidden" name="type" value="UPVOTE">
+                                    <button type="submit" class="btn btn-sm btn-link text-success text-decoration-none p-1" title="Upvote">
+                                        ▲
+                                    </button>
+                                </form>
+                            </sec:authorize>
+
+                            <sec:authorize access="isAnonymous()">
+                                <a th:href="@{/login}" class="btn btn-sm btn-link text-secondary text-decoration-none p-1" title="Log in to vote">
+                                    ▲
+                                </a>
+                            </sec:authorize>
+
+                            <span class="fw-bold text-dark badge bg-secondary"
+                                  th:text="${post.score ?: 0}">
+                                0
+                            </span>
+
+                            <sec:authorize access="isAuthenticated()">
+                                <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
+                                    <input type="hidden" name="type" value="DOWNVOTE">
+                                    <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-1" title="Downvote">
+                                        ▼
+                                    </button>
+                                </form>
+                            </sec:authorize>
+
+                            <sec:authorize access="isAnonymous()">
+                                <a th:href="@{/login}" class="btn btn-sm btn-link text-secondary text-decoration-none p-1" title="Log in to vote">
+                                    ▼
+                                </a>
+                            </sec:authorize>
+
                         </div>
 
                         <!-- Post Content -->
                         <div class="flex-grow-1">
-                            <p class="card-text" th:text="${post.content}">Post content goes here...</p>
+                            <p class="card-text lead" th:text="${post.content}">
+                                Post content goes here...
+                            </p>
+
+                            <!-- Stats -->
+                            <div class="small text-muted mt-3">
+                                <span>👍 <span th:text="${post.upvotes ?: 0}">0</span> Upvotes</span>
+                                •
+                                <span>👎 <span th:text="${post.downvotes ?: 0}">0</span> Downvotes</span>
+                                •
+                                <span>💬 <span th:text="${post.comments.size() ?: 0}">0</span> Comments</span>
+                            </div>
                         </div>
+
                     </div>
 
                 </div>
@@ -66,40 +114,88 @@
             <!-- Comments Section -->
             <div class="card shadow-sm">
 
-                <div class="card-header">
-                    <h5 class="mb-0">Comments</h5>
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">💬 Comments (<span th:text="${post.comments.size() ?: 0}">0</span>)</h5>
                 </div>
 
                 <div class="card-body">
 
                     <!-- Add Comment Form -->
-                    <div sec:authorize="isAuthenticated()" class="mb-4">
-                        <h6>Add a Comment</h6>
-                        <form th:action="@{/posts/{id}/comments(id=${post.id})}" method="post">
-                            <div class="mb-3">
-                                <textarea name="content" rows="3" class="form-control" 
-                                          placeholder="Write your comment..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
-                        </form>
-                    </div>
+                    <sec:authorize access="isAuthenticated()">
+                        <div class="mb-4 pb-4 border-bottom">
+                            <h6>Add a Comment</h6>
+                            <form th:action="@{/posts/{id}/comments(id=${post.id})}" method="post">
+                                <div class="mb-3">
+                                    <textarea name="content" rows="3" class="form-control" 
+                                              placeholder="Share your thoughts..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                            </form>
+                        </div>
+                    </sec:authorize>
+
+                    <sec:authorize access="isAnonymous()">
+                        <div class="alert alert-info mb-4">
+                            <a th:href="@{/login}" class="alert-link">Log in</a> to comment on this post.
+                        </div>
+                    </sec:authorize>
 
                     <!-- Comments List -->
-                    <div th:if="${#lists.isEmpty(post.comments)}" class="alert alert-info">
-                        No comments yet. Be the first to comment!
+                    <div th:if="${#lists.isEmpty(post.comments)}" class="alert alert-secondary text-center py-4">
+                        <p class="mb-0">No comments yet. Be the first to comment! 🎯</p>
                     </div>
 
-                    <div th:each="comment : ${post.comments}" class="card mb-3 border-0 bg-light">
-                        <div class="card-body">
-                            <h6 class="card-title mb-1">
-                                <span th:text="'u/' + ${comment.author.username}" class="fw-bold">Author</span>
-                            </h6>
-                            <small class="text-muted d-block mb-2"
-                                   th:text="${#temporals.format(comment.createdAt, 'MMM dd, yyyy HH:mm')}">
-                                timestamp
-                            </small>
-                            <p class="card-text" th:text="${comment.content}">Comment content</p>
+                    <!-- Comments -->
+                    <div th:each="comment : ${post.comments}" class="mb-3">
+
+                        <!-- Comment Card -->
+                        <div class="card border-0 bg-light">
+                            <div class="card-body pb-2">
+
+                                <!-- Comment Header -->
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="card-title mb-0">
+                                            <a th:href="@{/profile/{username}(username=${comment.author.username})}"
+                                               th:text="'u/' + ${comment.author.username}"
+                                               class="text-decoration-none fw-bold">
+                                                Author
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted"
+                                               th:text="${#temporals.format(comment.createdAt, 'MMM dd, yyyy HH:mm')}">
+                                            Date
+                                        </small>
+                                    </div>
+
+                                    <!-- Comment Actions -->
+                                    <sec:authorize access="isAuthenticated()">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                ⋯
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="#">Reply</a></li>
+                                                <li><a class="dropdown-item" href="#">Share</a></li>
+                                                <li th:if="${comment.author.username == #authentication.principal.username}">
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li th:if="${comment.author.username == #authentication.principal.username}">
+                                                    <a class="dropdown-item text-danger" href="#">Delete</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </sec:authorize>
+                                </div>
+
+                                <!-- Comment Content -->
+                                <p class="card-text" th:text="${comment.content}">
+                                    Comment content
+                                </p>
+
+                            </div>
                         </div>
+
                     </div>
 
                 </div>
@@ -111,21 +207,48 @@
         <!-- Sidebar -->
         <div class="col-md-4">
 
+            <!-- Post Info Card -->
             <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">ℹ️ Post Info</h6>
+                </div>
                 <div class="card-body">
-                    <h6 class="card-title">Post Stats</h6>
                     <ul class="list-unstyled">
-                        <li><strong>Upvotes:</strong> <span th:text="${post.upvotes ?: 0}">0</span></li>
-                        <li><strong>Downvotes:</strong> <span th:text="${post.downvotes ?: 0}">0</span></li>
-                        <li><strong>Comments:</strong> <span th:text="${post.comments.size()}">0</span></li>
+                        <li class="mb-2">
+                            <strong>Author:</strong><br>
+                            <a th:href="@{/profile/{username}(username=${post.author.username})}"
+                               th:text="${post.author.username}"
+                               class="text-decoration-none">
+                                Author
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Community:</strong><br>
+                            <a th:if="${post.community != null}"
+                               th:href="@{/communities/{id}(id=${post.community.id})}"
+                               th:text="'d/' + ${post.community.name}"
+                               class="text-decoration-none">
+                                Community
+                            </a>
+                        </li>
+                        <li>
+                            <strong>Posted:</strong><br>
+                            <small th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy HH:mm')}">
+                                Date
+                            </small>
+                        </li>
                     </ul>
                 </div>
             </div>
 
+            <!-- Share Card -->
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <a th:href="@{/}" class="btn btn-outline-secondary w-100">
-                        Back to Home
+                    <a th:href="@{/}" class="btn btn-outline-secondary w-100 mb-2">
+                        ← Back to Feed
+                    </a>
+                    <a th:href="@{/posts/create}" class="btn btn-primary w-100">
+                        ✏️ Create Post
                     </a>
                 </div>
             </div>

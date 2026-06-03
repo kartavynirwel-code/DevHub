@@ -2,6 +2,7 @@ package com.devhub.controller;
 
 import com.devhub.dto.CommunityCreateDto;
 import com.devhub.entity.Community;
+import com.devhub.exception.ResourceNotFoundException;
 import com.devhub.repository.CommunityRepository;
 import com.devhub.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -26,18 +27,12 @@ public class CommunityController {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Display community creation form
-     */
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("communityCreateDto", new CommunityCreateDto());
         return "create-community";
     }
 
-    /**
-     * Handle community creation
-     */
     @PostMapping("/create")
     public String createCommunity(@Valid @ModelAttribute("communityCreateDto") CommunityCreateDto dto,
                                    BindingResult result,
@@ -53,18 +48,15 @@ public class CommunityController {
         }
         
         try {
-            // Check if community name already exists
             if (communityRepository.existsByName(dto.getName())) {
                 log.warn("Community name already exists: {}", dto.getName());
                 model.addAttribute("error", "Community name '" + dto.getName() + "' already exists!");
                 return "create-community";
             }
             
-            // Get current user
             var creator = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             
-            // Create community
             Community community = Community.builder()
                 .name(dto.getName().trim())
                 .description(dto.getDescription().trim())
@@ -83,13 +75,10 @@ public class CommunityController {
         }
     }
 
-    /**
-     * View community if needed (optional endpoint for future use)
-     */
     @GetMapping("/{id}")
     public String viewCommunity(@PathVariable Long id, Model model) {
         Community community = communityRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Community not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
         model.addAttribute("community", community);
         return "community-details";
     }
