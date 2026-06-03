@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/base :: html_head('Post Details')}"></head>
+
+<body>
+
+<div th:replace="~{layout/base :: navbar}"></div>
+
+<div class="container my-4">
+
+    <div class="row">
+
+        <!-- Main Post Content -->
+        <div class="col-md-8">
+
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-body">
+
+                    <!-- Post Header Info -->
+                    <small class="text-muted d-block mb-2">
+                        Posted in
+                        <a th:if="${post.community != null}"
+                           th:href="@{/communities/{id}(id=${post.community.id})}"
+                           th:text="'d/' + ${post.community.name}"
+                           class="fw-bold text-decoration-none">
+                            Community
+                        </a>
+                        by
+                        <span th:text="'u/' + ${post.author.username}">author</span>
+                        <span th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy HH:mm')}">timestamp</span>
+                    </small>
+
+                    <!-- Post Title -->
+                    <h1 class="card-title mb-3" th:text="${post.title}">Post Title</h1>
+
+                    <!-- Voting Section -->
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="d-flex flex-column align-items-center bg-light px-3 py-2 rounded me-3">
+                            <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="type" value="UPVOTE">
+                                <button type="submit" class="btn btn-sm btn-link text-secondary text-decoration-none">
+                                    ▲ Upvote
+                                </button>
+                            </form>
+                            <span class="fw-bold my-2" th:text="${post.score}">0</span>
+                            <form th:action="@{/posts/{id}/vote(id=${post.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="type" value="DOWNVOTE">
+                                <button type="submit" class="btn btn-sm btn-link text-secondary text-decoration-none">
+                                    ▼ Downvote
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Post Content -->
+                        <div class="flex-grow-1">
+                            <p class="card-text" th:text="${post.content}">Post content goes here...</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <h5 class="mb-0">Comments</h5>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- Add Comment Form -->
+                    <div sec:authorize="isAuthenticated()" class="mb-4">
+                        <h6>Add a Comment</h6>
+                        <form th:action="@{/posts/{id}/comments(id=${post.id})}" method="post">
+                            <div class="mb-3">
+                                <textarea name="content" rows="3" class="form-control" 
+                                          placeholder="Write your comment..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                        </form>
+                    </div>
+
+                    <!-- Comments List -->
+                    <div th:if="${#lists.isEmpty(post.comments)}" class="alert alert-info">
+                        No comments yet. Be the first to comment!
+                    </div>
+
+                    <div th:each="comment : ${post.comments}" class="card mb-3 border-0 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title mb-1">
+                                <span th:text="'u/' + ${comment.author.username}" class="fw-bold">Author</span>
+                            </h6>
+                            <small class="text-muted d-block mb-2"
+                                   th:text="${#temporals.format(comment.createdAt, 'MMM dd, yyyy HH:mm')}">
+                                timestamp
+                            </small>
+                            <p class="card-text" th:text="${comment.content}">Comment content</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Post Stats</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Upvotes:</strong> <span th:text="${post.upvotes ?: 0}">0</span></li>
+                        <li><strong>Downvotes:</strong> <span th:text="${post.downvotes ?: 0}">0</span></li>
+                        <li><strong>Comments:</strong> <span th:text="${post.comments.size()}">0</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <a th:href="@{/}" class="btn btn-outline-secondary w-100">
+                        Back to Home
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

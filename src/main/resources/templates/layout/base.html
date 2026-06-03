@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+
+<head th:fragment="html_head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${title} + ' - DevHub'">DevHub</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-color: #dae0e6;
+            min-height: 100vh;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .card-post {
+            cursor: pointer;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .card-post:hover {
+            border-color: #878a8c;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top"
+     th:fragment="navbar">
+
+    <div class="container">
+
+        <a class="navbar-brand text-primary"
+           th:href="@{/}">
+            DevHub
+        </a>
+
+        <form class="d-flex flex-grow-1 mx-4"
+              th:action="@{/search}"
+              method="get">
+
+            <input class="form-control me-2"
+                   type="search"
+                   name="query"
+                   placeholder="Search DevHub..."
+                   aria-label="Search">
+        </form>
+
+        <div class="d-flex align-items-center">
+
+            <div sec:authorize="isAuthenticated()"
+                 class="d-flex align-items-center me-3 text-white">
+
+                <span class="me-2">
+                    u/<span sec:authentication="name">User</span>
+                </span>
+
+                <a th:href="@{/logout}"
+                   class="btn btn-outline-light btn-sm">
+                    Logout
+                </a>
+            </div>
+
+            <div sec:authorize="isAnonymous()">
+
+                <a th:href="@{/login}"
+                   class="btn btn-outline-light btn-sm me-2">
+                    Log In
+                </a>
+
+                <a th:href="@{/register}"
+                   class="btn btn-primary btn-sm">
+                    Sign Up
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+<div class="container my-4">
+    <div th:replace="${content}">
+        <!-- Page Content -->
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

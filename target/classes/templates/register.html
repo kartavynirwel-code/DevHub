@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout/base :: html_head('Register')}"></head>
+<body>
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head th:replace="~{layout/base :: html_head('Register')}"></head>
+
+<body>
+
+<div th:replace="~{layout/base :: navbar}"></div>
+
+<div class="container d-flex justify-content-center align-items-center"
+     style="min-height: 80vh;">
+
+    ```
+    <div class="card shadow p-4"
+         style="width: 100%; max-width: 500px;">
+
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Join DevHub</h2>
+            <p class="text-muted mb-0">
+                Create your account and start sharing with the community.
+            </p>
+        </div>
+
+        <!-- Global Error -->
+        <div th:if="${errorMessage}"
+             class="alert alert-danger"
+             th:text="${errorMessage}">
+        </div>
+
+        <!-- Success Message -->
+        <div th:if="${successMessage}"
+             class="alert alert-success"
+             th:text="${successMessage}">
+        </div>
+
+        <form th:action="@{/register}"
+              th:object="${user}"
+              method="post">
+
+            <!-- Username -->
+            <div class="mb-3">
+
+                <label for="username"
+                       class="form-label">
+                    Username
+                </label>
+
+                <input type="text"
+                       id="username"
+                       th:field="*{username}"
+                       class="form-control"
+                       placeholder="Choose a username"
+                       th:errorclass="is-invalid">
+
+                <div class="invalid-feedback"
+                     th:if="${#fields.hasErrors('username')}"
+                     th:errors="*{username}">
+                </div>
+
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+
+                <label for="email"
+                       class="form-label">
+                    Email Address
+                </label>
+
+                <input type="email"
+                       id="email"
+                       th:field="*{email}"
+                       class="form-control"
+                       placeholder="Enter your email"
+                       th:errorclass="is-invalid">
+
+                <div class="invalid-feedback"
+                     th:if="${#fields.hasErrors('email')}"
+                     th:errors="*{email}">
+                </div>
+
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+
+                <label for="password"
+                       class="form-label">
+                    Password
+                </label>
+
+                <input type="password"
+                       id="password"
+                       th:field="*{password}"
+                       class="form-control"
+                       placeholder="Create a strong password"
+                       th:errorclass="is-invalid">
+
+                <div class="invalid-feedback"
+                     th:if="${#fields.hasErrors('password')}"
+                     th:errors="*{password}">
+                </div>
+
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary w-100">
+                Create Account
+            </button>
+
+        </form>
+
+        <hr>
+
+        <p class="text-center mb-0">
+            Already have an account?
+            <a th:href="@{/login}"
+               class="text-decoration-none fw-semibold">
+                Log In
+            </a>
+        </p>
+
+    </div>
+    ```
+
+</div>
+
+</body>
+</html>
+
+</body>
+</html>
