@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "kartavyanirwel/devhub-app"
-        IMAGE_TAG = "v1.0"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -45,60 +45,53 @@ pipeline {
             }
         }
 
-        stage('Deploy MySQL') {
+        stage('Update Kubernetes Manifest') {
             steps {
-                sh '''
-                    kubectl apply -f k8s/manifests/Secrets.yaml
-                    kubectl apply -f k8s/manifests/Configmap.yaml
-                    kubectl apply -f k8s/manifests/mysql-deployment.yaml
-                '''
+                sh """
+                    sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${IMAGE_TAG}|g' k8s/manifests/Deployment.yaml
+
+                    git config user.email "jenkins@devhub.com"
+                    git config user.name "Jenkins"
+
+                    git add k8s/manifests/Deployment.yaml
+
+                    git commit -m "Update image to ${IMAGE_TAG}" || true
+                """
             }
         }
 
-        stage('Deploy Application') {
+        stage('Push Manifest Changes') {
             steps {
-                sh '''
-                    kubectl apply -f k8s/manifests/Deployment.yaml
-                    kubectl apply -f k8s/manifests/Service.yaml
-                '''
-            }
-        }
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-token',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
 
-        stage('Restart Deployment') {
-            steps {
-                sh '''
-                    kubectl rollout restart deployment/devhub-deployment
-                    kubectl rollout restart deployment/devhub-mysql
-                '''
-            }
-        }
-
-        stage('Wait For Rollout') {
-            steps {
-                sh '''
-                    kubectl rollout status deployment/devhub-mysql --timeout=300s
-                    kubectl rollout status deployment/devhub-deployment --timeout=300s
-                '''
+                    sh """
+                        git remote set-url origin https://\$GIT_USER:\$GIT_TOKEN@github.com/kartavynirwel-code/DevHub.git
+                        git push origin main
+                    """
+                }
             }
         }
 
         stage('Verify') {
             steps {
-                sh '''
-                    kubectl get pods
-                    kubectl get svc
-                '''
+                echo 'Manifest updated successfully. ArgoCD will deploy automatically.'
             }
         }
     }
 
     post {
         success {
-            echo 'Deployment Successful 🚀'
+            echo 'Build Successful 🚀'
         }
 
         failure {
-            echo 'Deployment Failed ❌'
+            echo 'Build Failed ❌'
         }
     }
 }
