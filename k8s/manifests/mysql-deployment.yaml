@@ -1,3 +1,40 @@
+# ============================================================
+#  DevHub - MySQL PersistentVolume + PersistentVolumeClaim
+#  Data pod restart ke baad bhi survive karega
+# ============================================================
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+  namespace: default
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce          # Ek time pe ek node hi read/write karega
+  persistentVolumeReclaimPolicy: Retain   # Pod delete ho toh data mat delete karo
+  hostPath:
+    path: /mnt/data/mysql    # Minikube node pe yeh path pe data store hoga
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi           # PV se 1Gi maang raha hai
+
+---
+# ============================================================
+#  DevHub - MySQL Deployment
+# ============================================================
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,20 +58,17 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3306
-
         env:
         - name: MYSQL_DATABASE
           valueFrom:
             secretKeyRef:
               name: devhub-secrets
               key: DB_NAME
-
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: devhub-secrets
               key: MYSQL_ROOT_PASSWORD
-
         resources:
           requests:
             memory: "256Mi"
@@ -42,16 +76,19 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
-
         volumeMounts:
         - name: mysql-storage
-          mountPath: /var/lib/mysql
-
+          mountPath: /var/lib/mysql    # MySQL yahan data store karta hai
       volumes:
       - name: mysql-storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: mysql-pvc         # emptyDir ki jagah PVC use ho raha hai
 
 ---
+# ============================================================
+#  DevHub - MySQL Service
+# ============================================================
+
 apiVersion: v1
 kind: Service
 metadata:
