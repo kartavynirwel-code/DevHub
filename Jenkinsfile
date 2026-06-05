@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "kartavyanirwel/devhub-app"
-        IMAGE_TAG = "${BUILD_NUMBER}"
-    }
+   environment {
+    DOCKER_IMAGE = "kartavyanirwel/devhub-app"
+    IMAGE_TAG = "${BUILD_NUMBER}"
+}
 
     stages {
 
@@ -61,22 +61,32 @@ pipeline {
         }
 
         stage('Push Manifest Changes') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'github-token',
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_TOKEN'
-                    )
-                ]) {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'github-token',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_TOKEN'
+            )
+        ]) {
 
-                    sh """
-                        git remote set-url origin https://\$GIT_USER:\$GIT_TOKEN@github.com/kartavynirwel-code/DevHub.git
-                        git push origin main
-                    """
-                }
-            }
+            sh '''
+                git checkout -B main origin/main
+
+                git config user.email "jenkins@devhub.com"
+                git config user.name "Jenkins"
+
+                git add k8s/manifests/Deployment.yaml
+
+                git commit -m "[skip ci] Update image ${IMAGE_TAG}" || true
+
+                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/kartavynirwel-code/DevHub.git
+
+                git push origin main
+            '''
         }
+    }
+}
 
         stage('Verify') {
             steps {
