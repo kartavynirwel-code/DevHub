@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = "kartavyanirwel/devhub-app"
         IMAGE_TAG = "v1.0"
-        KUBECONFIG = "${HOME}/.kube/config"
     }
 
     stages {
@@ -24,7 +23,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
+                    docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
                 """
             }
         }
@@ -38,10 +37,10 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push '"${DOCKER_IMAGE}:${IMAGE_TAG}"'
-                    '''
+                    sh """
+                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                        docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                    """
                 }
             }
         }
@@ -49,9 +48,9 @@ pipeline {
         stage('Deploy MySQL') {
             steps {
                 sh '''
-                kubectl apply -f k8s/manifests/Secrets.yaml
-                kubectl apply -f k8s/manifests/Configmap.yaml
-                kubectl apply -f k8s/manifests/mysql-deployment.yaml
+                    kubectl apply -f k8s/manifests/Secrets.yaml
+                    kubectl apply -f k8s/manifests/Configmap.yaml
+                    kubectl apply -f k8s/manifests/mysql-deployment.yaml
                 '''
             }
         }
@@ -59,7 +58,8 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 sh '''
-                kubectl apply -f k8s/manifests/Deployment.yaml
+                    kubectl apply -f k8s/manifests/Deployment.yaml
+                    kubectl apply -f k8s/manifests/Service.yaml
                 '''
             }
         }
@@ -67,8 +67,17 @@ pipeline {
         stage('Restart Deployment') {
             steps {
                 sh '''
-                kubectl rollout restart deployment/devhub-deployment
-                kubectl rollout status deployment/devhub-deployment
+                    kubectl rollout restart deployment/devhub-deployment
+                    kubectl rollout restart deployment/devhub-mysql
+                '''
+            }
+        }
+
+        stage('Wait For Rollout') {
+            steps {
+                sh '''
+                    kubectl rollout status deployment/devhub-mysql --timeout=300s
+                    kubectl rollout status deployment/devhub-deployment --timeout=300s
                 '''
             }
         }
@@ -76,9 +85,8 @@ pipeline {
         stage('Verify') {
             steps {
                 sh '''
-                kubectl get pods
-                kubectl get svc
-                kubectl get deployment
+                    kubectl get pods
+                    kubectl get svc
                 '''
             }
         }
