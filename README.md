@@ -150,7 +150,7 @@ docker push kartavyanirwel/devhub-app:latest
 | `DB_PORT` | `3306` | MySQL port |
 | `DB_NAME` | `devhub_db` | Database name |
 | `DB_USER` | `devhub_user` | Database user |
-| `DB_PASSWORD` | `devhub_pass` | Database password |
+| `DB_PASSWORD` | `devhub_pass` | Database Password |
 
 ---
 
