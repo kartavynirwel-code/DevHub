@@ -1,0 +1,24 @@
+# ============================================================
+#  DevHub - Kubernetes ConfigMap
+#  Non-sensitive configuration values
+#  Command: kubectl apply -f configmap.yaml
+# ============================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devhub-config
+  namespace: default
+data:
+  # ─── Database Connection (non-sensitive) ───────────────
+  DB_HOST: "devhub-mysql-service"
+  DB_PORT: "3306"
+
+  # ─── Spring Boot Config ────────────────────────────────
+  SPRING_JPA_DDL_AUTO: "update"
+  SPRING_JPA_SHOW_SQL: "false"
+  SPRING_THYMELEAF_CACHE: "true"
+
+  # ─── App Config ────────────────────────────────────────
+  SERVER_PORT: "8080"
+  SPRING_APPLICATION_NAME: "DevHub"

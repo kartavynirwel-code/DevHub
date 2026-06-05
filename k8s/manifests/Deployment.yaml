@@ -1,0 +1,95 @@
+# ============================================================
+#  DevHub - App Deployment + Service
+#  Command: kubectl apply -f deployment.yaml
+# ============================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devhub-deployment
+  namespace: default
+  labels:
+    app: devhub-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devhub-app
+  template:
+    metadata:
+      labels:
+        app: devhub-app
+    spec:
+      containers:
+      - name: devhub-app
+        image: kartavyanirwel/devhub-app:v1.0
+        ports:
+        - containerPort: 8080
+        env:
+        # ─── ConfigMap se (non-sensitive) ────────────────
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: devhub-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: devhub-config
+              key: DB_PORT
+        - name: SERVER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: devhub-config
+              key: SERVER_PORT
+        # ─── Secret se (sensitive) ───────────────────────
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: devhub-secrets
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: devhub-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: devhub-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # ─── Health Checks ───────────────────────────────
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30    # Spring Boot start hone ka time
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 15
+
+---
+# ─── App Service ───────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: devhub-service
+  namespace: default
+spec:
+  selector:
+    app: devhub-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: NodePort      
