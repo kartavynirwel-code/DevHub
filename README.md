@@ -1,4 +1,4 @@
-# DevHub 🚀
+# DevHub reddit 🚀
 
 A Reddit-inspired community platform built for developers — where you can create communities, share posts, vote, and discuss ideas.
 
