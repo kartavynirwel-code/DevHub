@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: devhub-app
-        image: kartavyanirwel/devhub-app:57
+        image: kartavyanirwel/devhub-app:58
         ports:
         - containerPort: 8080
         env:
