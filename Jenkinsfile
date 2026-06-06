@@ -69,21 +69,12 @@ pipeline {
                 passwordVariable: 'GIT_TOKEN'
             )
         ]) {
-
-            sh '''
-                git checkout -B main origin/main
-
+            sh """
                 git config user.email "jenkins@devhub.com"
                 git config user.name "Jenkins"
-
-                git add k8s/manifests/Deployment.yaml
-
-                git commit -m "[skip ci] Update image ${IMAGE_TAG}" || true
-
-                git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/kartavynirwel-code/DevHub.git
-
-                git push origin main
-            '''
+                git remote set-url origin https://\${GIT_USER}:\${GIT_TOKEN}@github.com/kartavynirwel-code/DevHub.git
+                git push origin HEAD:main
+            """
         }
     }
 }
