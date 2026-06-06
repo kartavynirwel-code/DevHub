@@ -69,6 +69,16 @@ spec:
             secretKeyRef:
               name: devhub-secrets
               key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: devhub-secrets
+              key: DB_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: devhub-secrets
+              key: DB_PASSWORD
         resources:
           requests:
             memory: "256Mi"
